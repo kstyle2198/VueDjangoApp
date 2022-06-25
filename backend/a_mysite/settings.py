@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'taggit',
 
     'b_blog.apps.BBlogConfig',
+    'c_accounts.apps.CAccountsConfig',
 ]
 
 MIDDLEWARE = [
@@ -128,3 +129,5 @@ STATICFILE_DIRS = [os.path.join(BASE_DIR, 'static')]
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 TAGGIT_CASE_INSENSITIVE = True
+
+AUTH_USER_MODEL = 'c_accounts.User'

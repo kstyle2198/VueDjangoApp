@@ -4,7 +4,7 @@ from b_blog.models import Post
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'description', 'create_dt', 'update_dt', 'tag_list')
+    list_display = ('id', 'title', 'description', 'create_dt', 'update_dt', 'tag_list', 'owner')
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related('tags')

@@ -112,7 +112,7 @@ export default {
         text: 'ID',
         align: 'start',
         sortable: false,
-        value: 'name',
+        value: 'id',
       },
       { text: 'Title', value: 'title' },
       { text: 'Description', value: 'description' },
@@ -167,7 +167,7 @@ export default {
         // 장고로부터의 응답이 성공인 경우
         this.posts = res.data;
       })
-      .catch(res => {
+      .catch(err => {
         console.log("POST GET ERR.RESPONSE", err.response);
         //장로고부터의 응답이 실패인 경우
         alert(err.response.status + ' ' + err.response.statusText);

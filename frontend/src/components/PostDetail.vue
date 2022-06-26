@@ -2,33 +2,29 @@
   <v-container class="blue lighten-5" fluid>
     <v-row align="center" justify="center">
       <v-col cols="12" lg="10">
-        <h1>Post Title Here</h1>
-        <p>2021-06-30, written by Kim</p>
+        <h1>{{ post.title }}</h1>
+        <p>{{ post.update_dt }}, written by {{ post.owner }}</p>
       </v-col>
     </v-row>
 
     <v-row align="start" justify="center">
       <v-col cols="12" sm="8" lg="7">
         <v-card class="pa-2" outlined tile>
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-            aliquip ex ea commodo consequat. Duis aute irure dolor in
-            reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-            pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-            culpa qui officia deserunt mollit anim id est laborum.
+          <p style="white-space: pre-wrap;">
+            {{ post.content }}
           </p>
           <div>
             <strong>TAGS:</strong>
 
-            <v-chip class="ma-2" close color="indigo darken-3" outlined>
-              <v-icon left> mdi-fire </v-icon>
-              Python
-            </v-chip>
-            <v-chip class="ma-2" close color="indigo darken-3" outlined>
-              <v-icon left> mdi-fire </v-icon>
-              django
+            <v-chip
+              class="ma-2"
+              color="indigo darken-3"
+              outlined
+              v-for="(tag, index) in post.tags"
+              :key="index"
+            >
+              <v-icon left>mdi-fire</v-icon>
+              {{ tag }}
             </v-chip>
           </div>
         </v-card>
@@ -37,20 +33,32 @@
       <v-col cols="12" sm="4" lg="3">
         <v-card class="pa-2 mb-5" tile>
           <p>Prev post</p>
-          <h2>Previous titles here</h2>
+          <h2
+            v-if="post.prev"
+            @click="fetchPostDetail(post.prev.id)"
+            class="my-hover"
+          >
+            {{ post.prev.title }}
+          </h2>
         </v-card>
         <v-card class="pa-2 mb-5" tile>
           <p>Next post</p>
-          <h2>Next titles here</h2>
+          <h2
+            v-if="post.next"
+            @click="fetchPostDetail(post.next.id)"
+            class="my-hover"
+          >
+            {{ post.next.title }}
+          </h2>
         </v-card>
         <v-card class="pa-2 mb-5" tile>
           <h2>Tags cloud</h2>
           <v-chip class="ma-2" color="green" text-color="white">
-            <v-avatar left class="green darken-4"> 1 </v-avatar>
+            <v-avatar left class="green darken-4">1</v-avatar>
             python
           </v-chip>
           <v-chip class="ma-2" color="green" text-color="white">
-            <v-avatar left class="green darken-4"> 2 </v-avatar>
+            <v-avatar left class="green darken-4">2</v-avatar>
             django
           </v-chip>
         </v-card>
@@ -60,60 +68,41 @@
 </template>
 
 <script>
+import axios from 'axios'
 export default {
   name: 'HelloWorld',
 
   data: () => ({
-    ecosystem: [
-      {
-        text: 'vuetify-loader',
-        href: 'https://github.com/vuetifyjs/vuetify-loader',
-      },
-      {
-        text: 'github',
-        href: 'https://github.com/vuetifyjs/vuetify',
-      },
-      {
-        text: 'awesome-vuetify',
-        href: 'https://github.com/vuetifyjs/awesome-vuetify',
-      },
-    ],
-    importantLinks: [
-      {
-        text: 'Documentation',
-        href: 'https://vuetifyjs.com',
-      },
-      {
-        text: 'Chat',
-        href: 'https://community.vuetifyjs.com',
-      },
-      {
-        text: 'Made with Vuetify',
-        href: 'https://madewithvuejs.com/vuetify',
-      },
-      {
-        text: 'Twitter',
-        href: 'https://twitter.com/vuetifyjs',
-      },
-      {
-        text: 'Articles',
-        href: 'https://medium.com/vuetify',
-      },
-    ],
-    whatsNext: [
-      {
-        text: 'Explore components',
-        href: 'https://vuetifyjs.com/components/api-explorer',
-      },
-      {
-        text: 'Select a layout',
-        href: 'https://vuetifyjs.com/getting-started/pre-made-layouts',
-      },
-      {
-        text: 'Frequently Asked Questions',
-        href: 'https://vuetifyjs.com/getting-started/frequently-asked-questions',
-      },
-    ],
+    post: {},
   }),
-};
+
+  created() {
+    console.log('created()...')
+    const postId = 2
+    this.fetchPostDetail(postId)
+  },
+
+  methods: {
+    fetchPostDetail(postId) {
+      console.log('fetchPostDetail()...', postId)
+      axios
+        .get(`/api/post/${postId}/`)
+        .then((res) => {
+          console.log('POST DETAIL GET RES', res)
+          this.post = res.data
+        })
+        .catch((err) => {
+          console.log('POST DETAIL GET ERR.RESPONE', err.response)
+          alert(err.response.status + ' ' + err.response.statusText)
+        })
+    },
+  },
+}
 </script>
+
+<style scoped>
+.my-hover:hover {
+  cursor: pointer;
+  font-style: italic;
+}
+</style>

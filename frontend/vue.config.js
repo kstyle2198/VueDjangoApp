@@ -6,7 +6,8 @@ module.exports = {
   ],
 
   devServer: {
-    index: 'home.html'    //루트 url을 home.html로 변경
+    index: 'home.html',    //루트 url을 home.html로 변경
+    proxy: 'http://127.0.0.1:8000',     //XMLHttpRequest only
   },
 
   outputDir: 'dist',

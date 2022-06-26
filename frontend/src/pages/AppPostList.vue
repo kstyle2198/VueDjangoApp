@@ -32,7 +32,7 @@
     </v-app-bar>
 
     <v-main>
-      <HelloWorld/>
+      <PostList/>
     </v-main>
 
     <v-footer app>
@@ -43,9 +43,9 @@
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue';
+import PostList from '../components/PostList.vue';
 export default {
-  components: {HelloWorld},
+  components: {PostList},
   data: () => ({ 
     drawer: null,
     items: [

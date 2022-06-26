@@ -93,13 +93,14 @@
         <v-icon small @click="deleteItem(item)">mdi-delete</v-icon>
       </template>
       <template v-slot:no-data>
-        <v-btn color="primary" @click="initialize">Reset</v-btn>
+        <v-btn color="primary" @click="fetchPostList">Reset</v-btn>
       </template>
     </v-data-table>
   </v-container>
 </template>
 
 <script>
+import axios from "axios";
 export default {
   name: 'HelloWorld',
 
@@ -113,10 +114,10 @@ export default {
         sortable: false,
         value: 'name',
       },
-      { text: 'Title', value: 'calories' },
-      { text: 'Description', value: 'fat' },
-      { text: 'Updated', value: 'carbs' },
-      { text: 'Owner', value: 'protein' },
+      { text: 'Title', value: 'title' },
+      { text: 'Description', value: 'description' },
+      { text: 'Updated', value: 'update_dt' },
+      { text: 'Owner', value: 'owner' },
       { text: 'Actions', value: 'actions', sortable: false },
     ],
     posts: [],
@@ -153,36 +154,25 @@ export default {
   },
 
   created() {
-    this.initialize()
+    this.fetchPostList()
   },
 
   methods: {
-    initialize() {
-      this.posts = [
-        {
-          name: '1',
-          calories: 'Python',
-          fat: 6.0,
-          carbs: 24,
-          protein: 4.0,
-        },
-        {
-          name: '2',
-          calories: 'Javascript',
-          fat: 9.0,
-          carbs: 37,
-          protein: 4.3,
-        },
-        {
-          name: '3',
-          calories: 'C',
-          fat: 16.0,
-          carbs: 23,
-          protein: 6.0,
-        },
-      ]
-    },
+    fetchPostList(){
+      console.log("fetchPostList()...");
 
+      axios.get('/api/post/list/')       //장고로 보낼 url
+      .then(res => {
+        console.log("POST GET RES", res);
+        // 장고로부터의 응답이 성공인 경우
+        this.posts = res.data;
+      })
+      .catch(res => {
+        console.log("POST GET ERR.RESPONSE", err.response);
+        //장로고부터의 응답이 실패인 경우
+        alert(err.response.status + ' ' + err.response.statusText);
+      });
+    },
     editItem(item) {
       this.editedIndex = this.posts.indexOf(item)
       this.editedItem = Object.assign({}, item)

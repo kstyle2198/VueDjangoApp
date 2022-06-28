@@ -1,3 +1,4 @@
+
 <template>
   <div>
     <v-navigation-drawer v-model="drawer" app clipped>
@@ -32,24 +33,28 @@
         <template v-slot:activator="{ on, attrs }">
           <v-btn text v-bind="attrs" v-on="on">
             <v-icon>mdi-account</v-icon>
-            Anonymous
+            {{ me.username }}
             <v-icon>mdi-dots-vertical</v-icon>
           </v-btn>
         </template>
 
         <v-list>
-          <v-list-item @click="dialog.login = true">
-            <v-list-item-title>Login</v-list-item-title>
-          </v-list-item>
-          <v-list-item @click="dialog.register = true">
-            <v-list-item-title>Register</v-list-item-title>
-          </v-list-item>
-          <v-list-item>
-            <v-list-item-title>Logout</v-list-item-title>
-          </v-list-item>
-          <v-list-item @click="dialog.pwdchg = true">
-            <v-list-item-title>Change Password</v-list-item-title>
-          </v-list-item>
+          <template v-if="me.username === 'Anonymous'">
+            <v-list-item @click="dialogOpen('login')">
+              <v-list-item-title>Login</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="dialogOpen('register')">
+              <v-list-item-title>Register</v-list-item-title>
+            </v-list-item>
+          </template>
+          <template v-else>
+            <v-list-item>
+              <v-list-item-title>Logout</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="dialogOpen('pwdchg')">
+              <v-list-item-title>Change Password</v-list-item-title>
+            </v-list-item>
+          </template>
         </v-list>
       </v-menu>
     </v-app-bar>
@@ -61,7 +66,7 @@
           <v-toolbar-title>Login form</v-toolbar-title>
         </v-toolbar>
         <v-card-text>
-          <v-form id="login-form">
+          <v-form id="login-form" ref="loginForm">
             <v-text-field
               label="Username"
               name="username"
@@ -92,7 +97,7 @@
           <v-toolbar-title>Register form</v-toolbar-title>
         </v-toolbar>
         <v-card-text>
-          <v-form>
+          <v-form id="register-form" ref="registerForm">
             <v-text-field
               label="Username"
               name="username"
@@ -131,7 +136,7 @@
           <v-toolbar-title>Password change form</v-toolbar-title>
         </v-toolbar>
         <v-card-text>
-          <v-form>
+          <v-form id="pwdchg-form" ref="pwdchgForm">
             <v-text-field
               label="Old Password"
               name="old_password"
@@ -166,8 +171,8 @@
 
 <script>
 import axios from 'axios';
-axios.defaults.xsrfCookieName = "csrftoken";
-axios.defaults.xsrfHeaderName = "X-CSRFToken";
+axios.defaults.xsrfCookieName = 'csrftoken';
+axios.defaults.xsrfHeaderName = 'X-CSRFToken';
 export default {
   data: () => ({
     drawer: null,
@@ -176,7 +181,7 @@ export default {
       register: false,
       pwdchg: false,
     },
-    me: {},
+    me: { username: 'Anonymous' },
     items: [
       { title: 'Dashboard', icon: 'mdi-view-dashboard' },
       { title: 'Photos111', icon: 'mdi-image' },
@@ -185,23 +190,43 @@ export default {
   }),
 
   methods: {
+    dialogOpen(kind) {
+      console.log('dialogOpen()...', kind)
+      if (kind === 'login') {
+        this.dialog.login = true
+      } else if (kind === 'register') {
+        this.dialog.register = true
+      } else if (kind === 'pwdchg') {
+        this.dialog.pwdchg = true
+      }
+    },
     cancel(kind) {
       console.log('cancel()...', kind)
-      if (kind === 'login') this.dialog.login = false
-      else if (kind === 'register') this.dialog.register = false
-      else if (kind === 'pwdchg') this.dialog.pwdchg = false
+      if (kind === 'login') {
+        this.dialog.login = false
+        this.$refs.loginForm.reset()
+      } else if (kind === 'register') {
+        this.dialog.register = false
+        this.$refs.registerForm.reset()
+      } else if (kind === 'pwdchg') {
+        this.dialog.pwdchg = false
+        this.$refs.pwdchgForm.reset()
+      }
     },
     save(kind) {
       console.log('save()...', kind)
       if (kind === 'login') {
         this.login()
         this.dialog.login = false
+        this.$refs.loginForm.reset()
       } else if (kind === 'register') {
         this.register()
         this.dialog.register = false
+        this.$refs.registerForm.reset()
       } else if (kind === 'pwdchg') {
         this.pwdchg()
         this.dialog.pwdchg = false
+        this.$refs.pwdchgForm.reset()
       }
     },
 

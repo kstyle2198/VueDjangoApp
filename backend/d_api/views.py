@@ -87,3 +87,21 @@ class ApiPwdchgView(PasswordChangeView):
 
     def form_invalid(self, form):
         return JsonResponse(data=form.errors, safe=True, status=400)
+
+
+from django.contrib.auth import get_user
+from django.views.generic import View
+class ApiMeView(View):
+    def get(self, request, *arg, **kwargs):
+        user = get_user(request)
+        if user.is_authenticated:
+            userDict = {
+                'id': user.id,
+                'username': user.username,
+            }
+        else:
+            userDict = {
+                'username': 'Anonymous',
+            }
+        return JsonResponse(data=userDict, safe=True, status=200)
+

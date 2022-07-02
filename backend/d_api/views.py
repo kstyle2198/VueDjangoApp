@@ -7,10 +7,12 @@ from django.contrib.auth.views import LoginView
 
 from b_blog.models import Post
 from d_api.views_util import obj_to_post, prev_next_post
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 # Create your views here.
 
-
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 class ApiPostLV(BaseListView):
     model = Post
 
@@ -28,7 +30,6 @@ class ApiPostDV(BaseDetailView):
         post = obj_to_post(obj)
         post['prev'], post['next'] = prev_next_post(obj)
         return JsonResponse(data=post, safe=True, status=200)
-
 
 class ApiLoginView(LoginView):
     def form_valid(self, form):

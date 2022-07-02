@@ -48,7 +48,7 @@
             </v-list-item>
           </template>
           <template v-else>
-            <v-list-item>
+            <v-list-item @click="logout">
               <v-list-item-title>Logout</v-list-item-title>
             </v-list-item>
             <v-list-item @click="dialogOpen('pwdchg')">
@@ -90,6 +90,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
     <!-- register dialog -->
     <v-dialog v-model="dialog.register" max-width="450">
       <v-card class="elevation-12">
@@ -120,10 +121,10 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="grey" text @click="dialog.register = false">
+          <v-btn color="grey" text @click="cancel('register')">
             Cancel
           </v-btn>
-          <v-btn color="success" class="mr-5" @click="dialog.register = false">
+          <v-btn color="success" class="mr-5" @click="save('register')">
             Register
           </v-btn>
         </v-card-actions>
@@ -159,8 +160,8 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="grey" text @click="dialog.pwdchg = false">Cancel</v-btn>
-          <v-btn color="warning" class="mr-5" @click="dialog.pwdchg = false">
+          <v-btn color="grey" text @click="cancel('pwdchg')">Cancel</v-btn>
+          <v-btn color="warning" class="mr-5" @click="save('pwdchg')">
             Password change
           </v-btn>
         </v-card-actions>
@@ -245,6 +246,55 @@ export default {
           alert('login failure!!!')
         })
     },
+
+    register() {
+      console.log('register()...')
+      const postData = new FormData(document.getElementById('register-form'))
+      axios
+        .post('/api/register/', postData)
+        .then((res) => {
+          console.log('REGISTER POST RES', res)
+          alert(`user ${res.data.username} register success ^^;`)
+          // this.me = res.data   // 이 라인을 살리면, 레지스터와 동시에 로그인됨
+        })
+        .catch((err) => {
+          console.log('REGISTER POST ERR.RESPONSE', err.response)
+          alert('register failure!!!')
+        })
+    },
+
+    pwdchg() {
+      console.log('pwdchg()...')
+      const postData = new FormData(document.getElementById('pwdchg-form'))
+      axios
+        .post('/api/pwdchg/', postData)
+        .then((res) => {
+          console.log('PWDCHG POST RES', res)
+          alert(`user ${this.me.username} pwdchg success ^^;`)
+
+        })
+        .catch((err) => {
+          console.log('PWDCHG POST ERR.RESPONSE', err.response)
+          alert('pwdchg failure!!!')
+        })
+    },
+
+    logout() {
+      console.log("logout()...");
+      axios.get('/api/logout/')
+      .then((res) => {
+        console.log('LOGOUT GET RES', res);
+        alert(`user ${this.me.username} logout success ^^;`);
+        this.me ={ username: 'Anonymous'};
+      })
+      .catch((err) => {
+        console.log('LOGOUT GET ERR.RESPONSE', err.response);
+        alert('logout failure!!!');
+      });
+
+    },
+
+
   },
 }
 </script>

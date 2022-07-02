@@ -1,9 +1,15 @@
+from django.views.decorators.cache import never_cache
+from django.contrib.auth import update_session_auth_hash
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.generic.list import BaseListView
 from django.views.generic.detail import BaseDetailView
-from django.contrib.auth import login
-from django.contrib.auth.views import LoginView
+from django.contrib.auth import login, logout
+from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
+from django.views.generic.edit import BaseCreateView
+from django.contrib.auth import get_user_model
+from c_accounts.forms import MyUserCreationForm
+
 
 from b_blog.models import Post
 from d_api.views_util import obj_to_post, prev_next_post
@@ -11,6 +17,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 # Create your views here.
+
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')
 class ApiPostLV(BaseListView):
@@ -31,6 +38,7 @@ class ApiPostDV(BaseDetailView):
         post['prev'], post['next'] = prev_next_post(obj)
         return JsonResponse(data=post, safe=True, status=200)
 
+
 class ApiLoginView(LoginView):
     def form_valid(self, form):
         user = form.get_user()
@@ -42,6 +50,40 @@ class ApiLoginView(LoginView):
             'username': user.username,
         }
         return JsonResponse(data=userDict, safe=True, status=200)
+
+    def form_invalid(self, form):
+        return JsonResponse(data=form.errors, safe=True, status=400)
+
+
+class ApiRegisterView(BaseCreateView):
+    # model = get_user_model()
+    # fields = '__all__'
+    form_class = MyUserCreationForm
+
+    def form_valid(self, form):
+        self.object = form.save()
+        userDict = {
+            'id': self.object.id,
+            'username': self.object.username,
+        }
+        return JsonResponse(data=userDict, safe=True, status=201)
+
+    def form_invalid(self, form):
+        return JsonResponse(data=form.errors, safe=True, status=400)
+
+
+class ApiLogoutView(LogoutView):
+    @method_decorator(never_cache)
+    def dispatch(self, reqeust, *args, **kwargs):
+        logout(self.request)
+        return JsonResponse(data={}, safe=True, status=200)
+
+
+class ApiPwdchgView(PasswordChangeView):
+    def form_valid(self, form):
+        form.save()
+        update_session_auth_hash(self.request, form.user)
+        return JsonResponse(data={}, safe=True, status=200)
 
     def form_invalid(self, form):
         return JsonResponse(data=form.errors, safe=True, status=400)

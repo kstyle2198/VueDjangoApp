@@ -20,6 +20,9 @@ class Post(models.Model):
     def __str__(self):
         return self.title
 
+    class Meta:
+        ordering = ('-update_dt',)
+
     def get_absolute_url(self):
         return reverse('blog:post_detail', args=(self.id))
 

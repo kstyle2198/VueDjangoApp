@@ -24,10 +24,12 @@
       <v-btn text href="/blog/post/list/">Blog</v-btn>
       <v-btn text href="/admin/">Admin</v-btn>
 
-      <!-- <v-btn text>/</v-btn>
+      <!-- 개발용 메뉴 시작점-->
+      <v-btn text>/</v-btn>
       <v-btn text href="post_list.html">PostList</v-btn>
-      <v-btn text href="post_detail.html">PostDetail</v-btn> -->
-      
+      <v-btn text href="post_detail.html">PostDetail</v-btn>
+      <!-- 개발용 메뉴 종료점-->
+
       <v-spacer></v-spacer>
 
       <v-menu offset-y left bottom>
@@ -172,8 +174,8 @@
 </template>
 
 <script>
-import axios from 'axios';
-import EventBus from './event_bus';
+import axios from 'axios'
+import EventBus from './event_bus'
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -198,7 +200,7 @@ export default {
     me(newVal, oldVal) {
       console.log('watch.me()...', newVal, oldVal)
       EventBus.$emit('me_change', newVal)
-    }
+    },
   },
 
   created() {

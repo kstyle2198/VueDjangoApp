@@ -1,3 +1,5 @@
+from django.db.models import Count
+from c_accounts.views import MyLoginRequiredMixin, OwnerOnlyMixin
 from django.views.generic import View
 from django.contrib.auth import get_user
 from django.views.decorators.cache import never_cache
@@ -11,10 +13,11 @@ from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
 from django.views.generic.edit import BaseCreateView, BaseUpdateView, BaseDeleteView
 from django.contrib.auth import get_user_model
 from c_accounts.forms import MyUserCreationForm
+from taggit.models import Tag
 
 
 from b_blog.models import Post
-from d_api.views_util import obj_to_post, prev_next_post
+from d_api.views_util import obj_to_post, prev_next_post, make_tag_cloud
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 
@@ -23,7 +26,15 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')
 class ApiPostLV(BaseListView):
-    model = Post
+    # model = Post
+
+    def get_queryset(self):
+        tagname = self.request.GET.get('tagname')
+        if tagname:
+            qs = Post.objects.filter(tags__name=tagname)
+        else:
+            qs = Post.objects.all()
+        return qs
 
     def render_to_response(self, context, **response_kwargs):
         qs = context['object_list']
@@ -39,6 +50,26 @@ class ApiPostDV(BaseDetailView):
         post = obj_to_post(obj)
         post['prev'], post['next'] = prev_next_post(obj)
         return JsonResponse(data=post, safe=True, status=200)
+
+
+class ApiTagCloudLV(BaseListView):
+    # model = Tag
+    queryset = Tag.objects.annotate(count=Count('post'))
+    # def get_queryset(self):
+    #     return Tag.objects.all()
+
+    def render_to_response(self, context, **response_kwargs):
+        qs = context['object_list']
+        # tagList = []
+        # for obj in qs:
+        #     tagList.append({
+        #         'name': obj.name,
+        #         # 'count': obj.count,
+        #         # 'weight':obj.weight,
+        #     })
+
+        tagList = make_tag_cloud(qs)
+        return JsonResponse(data=tagList, safe=False, status=200)
 
 
 class ApiLoginView(LoginView):
@@ -106,7 +137,6 @@ class ApiMeView(View):
         return JsonResponse(data=userDict, safe=True, status=200)
 
 
-from c_accounts.views import MyLoginRequiredMixin, OwnerOnlyMixin
 class ApiPostCV(MyLoginRequiredMixin, BaseCreateView):
     model = Post
     fields = '__all__'

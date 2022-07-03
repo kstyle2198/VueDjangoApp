@@ -20,7 +20,7 @@
 
       <v-spacer></v-spacer>
       <v-btn text href="/">Home</v-btn>
-      
+
       <v-btn text href="/blog/post/list/">Blog</v-btn>
       <v-btn text href="/admin/">Admin</v-btn>
       <v-btn text>/</v-btn>
@@ -171,9 +171,12 @@
 </template>
 
 <script>
-import axios from 'axios'
+import axios from 'axios';
+import EventBus from './event_bus';
+
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
+
 export default {
   data: () => ({
     drawer: null,
@@ -190,8 +193,15 @@ export default {
     ],
   }),
 
+  watch: {
+    me(newVal, oldVal) {
+      console.log('watch.me()...', newVal, oldVal)
+      EventBus.$emit('me_change', newVal)
+    }
+  },
+
   created() {
-    this.getUserInfo();
+    this.getUserInfo()
   },
 
   methods: {
@@ -275,7 +285,6 @@ export default {
         .then((res) => {
           console.log('PWDCHG POST RES', res)
           alert(`user ${this.me.username} pwdchg success ^^;`)
-
         })
         .catch((err) => {
           console.log('PWDCHG POST ERR.RESPONSE', err.response)
@@ -284,30 +293,32 @@ export default {
     },
 
     logout() {
-      console.log("logout()...");
-      axios.get('/api/logout/')
-      .then((res) => {
-        console.log('LOGOUT GET RES', res);
-        alert(`user ${this.me.username} logout success ^^;`);
-        this.me ={ username: 'Anonymous'};
-      })
-      .catch((err) => {
-        console.log('LOGOUT GET ERR.RESPONSE', err.response);
-        alert('logout failure!!!');
-      });
+      console.log('logout()...')
+      axios
+        .get('/api/logout/')
+        .then((res) => {
+          console.log('LOGOUT GET RES', res)
+          alert(`user ${this.me.username} logout success ^^;`)
+          this.me = { username: 'Anonymous' }
+        })
+        .catch((err) => {
+          console.log('LOGOUT GET ERR.RESPONSE', err.response)
+          alert('logout failure!!!')
+        })
     },
 
     getUserInfo() {
-      console.log("getUserInfo()...");
-      axios.get('/api/me/')
-      .then(res => {
-        console.log("GETUSERINFO GET RES", res);
-        this.me = res.data;
-      })
-      .catch(err => {
-        console.log("GETUSERINFO GET ERR RESPONSE", err.response);
-        alert(err.response.status + ' ' + err.response.statusText);
-      });
+      console.log('getUserInfo()...')
+      axios
+        .get('/api/me/')
+        .then((res) => {
+          console.log('GETUSERINFO GET RES', res)
+          this.me = res.data
+        })
+        .catch((err) => {
+          console.log('GETUSERINFO GET ERR RESPONSE', err.response)
+          alert(err.response.status + ' ' + err.response.statusText)
+        })
     },
   },
 }

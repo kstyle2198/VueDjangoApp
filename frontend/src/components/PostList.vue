@@ -12,63 +12,14 @@
           <v-toolbar-title>Post List</v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
           <v-spacer></v-spacer>
-          <v-dialog v-model="dialog" max-width="500px">
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn color="primary" dark class="mb-2" v-bind="attrs" v-on="on">
-                New Item
-              </v-btn>
-            </template>
-            <v-card>
-              <v-card-title>
-                <span class="text-h5">{{ formTitle }}</span>
-              </v-card-title>
-
-              <v-card-text>
-                <v-container>
-                  <v-row>
-                    <v-col cols="12" sm="6" md="4">
-                      <v-text-field
-                        v-model="editedItem.name"
-                        label="Dessert name"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col cols="12" sm="6" md="4">
-                      <v-text-field
-                        v-model="editedItem.calories"
-                        label="Calories"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col cols="12" sm="6" md="4">
-                      <v-text-field
-                        v-model="editedItem.fat"
-                        label="Fat (g)"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col cols="12" sm="6" md="4">
-                      <v-text-field
-                        v-model="editedItem.carbs"
-                        label="Carbs (g)"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col cols="12" sm="6" md="4">
-                      <v-text-field
-                        v-model="editedItem.protein"
-                        label="Protein (g)"
-                      ></v-text-field>
-                    </v-col>
-                  </v-row>
-                </v-container>
-              </v-card-text>
-
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="close">
-                  Cancel
-                </v-btn>
-                <v-btn color="blue darken-1" text @click="save">Save</v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
+          <v-btn
+            color="primary"
+            dark
+            class="mb-2"
+            @click.stop="dialogOpen('create', {})"
+          >
+            New Post
+          </v-btn>
           <v-dialog v-model="dialogDelete" max-width="500px">
             <v-card>
               <v-card-title class="text-h5">
@@ -88,21 +39,77 @@
           </v-dialog>
         </v-toolbar>
       </template>
+
       <template v-slot:item.actions="{ item }">
-        <v-icon small class="mr-2" @click="editItem(item)">mdi-pencil</v-icon>
-        <v-icon small @click="deleteItem(item)">mdi-delete</v-icon>
+        <v-icon small class="mr-2" @click.stop="dialogOpen('update', item)">
+          mdi-pencil
+        </v-icon>
+        <v-icon small @click.stop="deletePost(item)">mdi-delete</v-icon>
       </template>
       <template v-slot:no-data>
         <v-btn color="primary" @click="fetchPostList">Reset</v-btn>
       </template>
     </v-data-table>
+    <v-dialog v-model="dialog" max-width="800px">
+      <v-card>
+        <v-card-title>
+          <span class="text-h5">{{ formTitle }}</span>
+        </v-card-title>
+
+        <v-card-text>
+          <v-form id="post-form" ref="postForm">
+            <v-text-field
+              label="ID"
+              name="id"
+              v-model="editedItem.id"
+              readonly
+            ></v-text-field>
+            <v-text-field
+              label="TITLE"
+              name="title"
+              v-model="editedItem.title"
+            ></v-text-field>
+            <v-text-field
+              label="DESCRIPTION"
+              name="description"
+              v-model="editedItem.description"
+            ></v-text-field>
+            <v-textarea
+              outlined
+              label="CONTENT"
+              name="content"
+              v-model="editedItem.content"
+            ></v-textarea>
+            <v-text-field
+              label="OWNDER"
+              name="owner"
+              v-model="editedItem.owner"
+              readonly
+            ></v-text-field>
+            <v-text-field
+              label="TAGS"
+              name="tags"
+              v-model="editedItem.tags"
+            ></v-text-field>
+          </v-form>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" text @click="cancel">Cancel</v-btn>
+          <v-btn color="blue darken-1" text @click="save">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
 <script>
-import axios from "axios";
+import axios from 'axios'
+import EventBus from './event_bus'
+
 export default {
-  name: 'HelloWorld',
+  // name: 'HelloWorld',
 
   data: () => ({
     dialog: false,
@@ -121,99 +128,178 @@ export default {
       { text: 'Actions', value: 'actions', sortable: false },
     ],
     posts: [],
+    tagname: '',
     editedIndex: -1,
-    editedItem: {
-      name: '',
-      calories: 0,
-      fat: 0,
-      carbs: 0,
-      protein: 0,
-    },
-    defaultItem: {
-      name: '',
-      calories: 0,
-      fat: 0,
-      carbs: 0,
-      protein: 0,
-    },
+    editedItem: {},
+    actionkind: '',
+    me: { username: 'Anonymous' },
   }),
 
   computed: {
     formTitle() {
-      return this.editedIndex === -1 ? 'New Item' : 'Edit Item'
-    },
-  },
-
-  watch: {
-    dialog(val) {
-      val || this.close()
-    },
-    dialogDelete(val) {
-      val || this.closeDelete()
+      // return this.editedIndex === -1 ? 'Create Item' : 'Update Item'
+      if (this.actionkind === 'create') return 'Create Item'
+      else return 'Update Item'
     },
   },
 
   created() {
+    const params = new URL(location).searchParams
+    //const paramTag = param.get('tagname');
+    this.tagname = params.get('tagname')
     this.fetchPostList()
+
+    EventBus.$on('me_change', (val) => {
+      this.me = val
+    })
   },
 
   methods: {
-    fetchPostList(){
-      console.log("fetchPostList()...");
+    fetchPostList() {
+      console.log('fetchPostList()...', this.tagname)
 
-      axios.get('/api/post/list/')       //장고로 보낼 url
-      .then(res => {
-        console.log("POST GET RES", res);
-        // 장고로부터의 응답이 성공인 경우
-        this.posts = res.data;
-      })
-      .catch(err => {
-        console.log("POST GET ERR.RESPONSE", err.response);
-        //장로고부터의 응답이 실패인 경우
-        alert(err.response.status + ' ' + err.response.statusText);
-      });
+      let getUrl = ''
+      if (this.tagname) getUrl = `/api/post/list/?tagname=${this.tagname}`
+      else getUrl = '/api/post/list/'
+
+      axios
+        .get(getUrl) //장고로 보낼 url
+        .then((res) => {
+          console.log('POST LIST GET RES', res)
+          // 장고로부터의 응답이 성공인 경우
+          this.posts = res.data
+        })
+        .catch((err) => {
+          console.log('POST LIST GET ERR.RESPONSE', err.response)
+          //장로고부터의 응답이 실패인 경우
+          alert(err.response.status + ' ' + err.response.statusText)
+        })
     },
-    editItem(item) {
-      this.editedIndex = this.posts.indexOf(item)
-      this.editedItem = Object.assign({}, item)
+
+    serverPage(item) {
+      console.log('serverPage()...', item)
+      location.href = `/blog/post/${item.id}/`
+    },
+
+    dialogOpen(actionkind, item) {
+      console.log('dialogOpen()...', actionkind, item)
+      if (this.me.username === 'Anonymous') {
+        alert('Please login first !')
+        return
+      }
+      this.actionkind = actionkind
+      if (actionkind === 'creat') {
+        this.editedIndex = -1
+        this.editedItem = {}
+      } else {
+        this.editedIndex = this.posts.indexOf(item)
+        this.editedItem = Object.assign({}, item)
+      }
       this.dialog = true
     },
-
-    deleteItem(item) {
-      this.editedIndex = this.posts.indexOf(item)
-      this.editedItem = Object.assign({}, item)
-      this.dialogDelete = true
-    },
-
-    deleteItemConfirm() {
-      this.desserts.splice(this.editedIndex, 1)
-      this.closeDelete()
-    },
-
-    close() {
+    cancel() {
+      console.log('cancel()...')
       this.dialog = false
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem)
-        this.editedIndex = -1
-      })
     },
-
-    closeDelete() {
-      this.dialogDelete = false
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem)
-        this.editedIndex = -1
-      })
-    },
-
     save() {
-      if (this.editedIndex > -1) {
-        Object.assign(this.desserts[this.editedIndex], this.editedItem)
-      } else {
-        this.desserts.push(this.editedItem)
-      }
-      this.close()
+      console.log('save()...')
+      if (this.actionkind === 'create') this.createPost()
+      else this.updatePost()
+      this.dialog = false
     },
+
+    createPost() {
+      console.log('createPist()...')
+      const postData = new FormData(document.getElementById('post-form'))
+      axios
+        .post('/api/post/create/', postData)
+        .then((res) => {
+          console.log('CREATE POST POST RES', res)
+          this.posts.push(res.data)
+        })
+        .catch((err) => {
+          console.log('CREATE POST POST ERR PESPONSE', err.response)
+          alert(err.response.status + ' ' + err.response.statusText)
+        })
+    },
+
+    updatePost() {
+      console.log('updatePist()...')
+      const postData = new FormData(document.getElementById('post-form'))
+      postData.set('owner', this.me.id)
+      axios
+        .post(`/api/post/${this.editedItem.id}/update/`, postData)
+        .then((res) => {
+          console.log('UPDATE POST POST RES', res)
+          this.posts.splice(this.editedIndex, 1, res.data)
+        })
+        .catch((err) => {
+          console.log('UPDATE POST POST ERR PESPONSE', err.response)
+          alert(err.response.status + ' ' + err.response.statusText)
+        })
+    },
+
+    deletePost(item) {
+      console.log('deletePost()...', item)
+      if (this.me.username === 'Anonymous') {
+        alert('Please login first !')
+        return
+      }
+      if (!confirm('Are you sure to delete ?')) return
+      axios
+        .delete(`/api/post/${item.id}/delete/`)
+        .then((res) => {
+          console.log('DELETE POST DELETE RES', res)
+          const index = this.posts.indexOf(item)
+          this.posts.splice(index, 1)
+        })
+        .catch((err) => {
+          console.log('DELETE POST DELETE ERR RESPONSE', err.response)
+          alert(err.response.status + ' ' + err.response.statusText)
+        })
+    },
+
+    // editItem(item) {
+    //   this.editedIndex = this.posts.indexOf(item);
+    //   this.editedItem = Object.assign({}, item);
+    //   this.dialog = true;
+    // },
+
+    // deleteItem(item) {
+    //   this.editedIndex = this.posts.indexOf(item);
+    //   this.editedItem = Object.assign({}, item);
+    //   this.dialogDelete = true;
+    // },
+
+    // deleteItemConfirm() {
+    //   this.desserts.splice(this.editedIndex, 1);
+    //   this.closeDelete();
+    // },
+
+    // close() {
+    //   this.dialog = false;
+    //   this.$nextTick(() => {
+    //     this.editedItem = Object.assign({}, this.defaultItem);
+    //     this.editedIndex = -1;
+    //   });
+    // },
+
+    // closeDelete() {
+    //   this.dialogDelete = false;
+    //   this.$nextTick(() => {
+    //     this.editedItem = Object.assign({}, this.defaultItem);
+    //     this.editedIndex = -1;
+    //   });
+    // },
+
+    // save() {
+    //   if (this.editedIndex > -1) {
+    //     Object.assign(this.desserts[this.editedIndex], this.editedItem);
+    //   } else {
+    //     this.desserts.push(this.editedItem);
+    //   }
+    //   this.close();
+    // },
   },
 }
 </script>

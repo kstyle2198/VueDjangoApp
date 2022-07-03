@@ -1,3 +1,5 @@
+from django.views.generic import View
+from django.contrib.auth import get_user
 from django.views.decorators.cache import never_cache
 from django.contrib.auth import update_session_auth_hash
 from django.http import JsonResponse
@@ -6,7 +8,7 @@ from django.views.generic.list import BaseListView
 from django.views.generic.detail import BaseDetailView
 from django.contrib.auth import login, logout
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
-from django.views.generic.edit import BaseCreateView
+from django.views.generic.edit import BaseCreateView, BaseUpdateView, BaseDeleteView
 from django.contrib.auth import get_user_model
 from c_accounts.forms import MyUserCreationForm
 
@@ -89,8 +91,6 @@ class ApiPwdchgView(PasswordChangeView):
         return JsonResponse(data=form.errors, safe=True, status=400)
 
 
-from django.contrib.auth import get_user
-from django.views.generic import View
 class ApiMeView(View):
     def get(self, request, *arg, **kwargs):
         user = get_user(request)
@@ -105,3 +105,39 @@ class ApiMeView(View):
             }
         return JsonResponse(data=userDict, safe=True, status=200)
 
+
+from c_accounts.views import MyLoginRequiredMixin, OwnerOnlyMixin
+class ApiPostCV(MyLoginRequiredMixin, BaseCreateView):
+    model = Post
+    fields = '__all__'
+
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        self.object = form.save()
+        post = obj_to_post(self.object)
+        return JsonResponse(data=post, safe=True, status=201)
+
+    def form_invalid(self, form):
+        return JsonResponse(data=form.errors, safe=True, status=400)
+
+
+class ApiPostUV(OwnerOnlyMixin, BaseUpdateView):
+    model = Post
+    fields = '__all__'
+
+    def form_valid(self, form):
+        self.object = form.save()
+        post = obj_to_post(self.object)
+        return JsonResponse(data=post, safe=True, status=200)
+
+    def form_invalid(self, form):
+        return JsonResponse(data=form.errors, safe=True, status=400)
+
+
+class ApiPostDelV(OwnerOnlyMixin, BaseDeleteView):
+    model = Post
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.delete()
+        return JsonResponse(data={}, safe=True, status=204)

@@ -6,10 +6,16 @@
       sort-by="name"
       class="elevation-1"
       v-bind:items-per-page="5"
+      @click:row="serverPage"
     >
       <template v-slot:top>
         <v-toolbar flat color="grey">
-          <v-toolbar-title>Post List</v-toolbar-title>
+          <v-toolbar-title>
+            Post List
+            <span v-if="tagname" class="body-1 font-italic ml-3">
+              (with {{ tagname }} tagged)
+            </span>
+          </v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
           <v-spacer></v-spacer>
           <v-btn
@@ -145,7 +151,7 @@ export default {
 
   created() {
     const params = new URL(location).searchParams
-    //const paramTag = param.get('tagname');
+    // const paramTag = params.get('tagname');
     this.tagname = params.get('tagname')
     this.fetchPostList()
 
@@ -160,6 +166,7 @@ export default {
 
       let getUrl = ''
       if (this.tagname) getUrl = `/api/post/list/?tagname=${this.tagname}`
+      // if (this.tagname) getUrl = `/api/post/list/?tagname=${this.tagname}`
       else getUrl = '/api/post/list/'
 
       axios
@@ -303,3 +310,9 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+.v-data-table >>> tbody > tr {
+  cursor: pointer;
+}
+</style>
